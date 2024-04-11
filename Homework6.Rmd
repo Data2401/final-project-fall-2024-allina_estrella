@@ -18,7 +18,21 @@ When you click the **Knit** button a document will be generated that includes bo
 ## Partner
 ```{r}
 ## Yes, I am working with a Partner. Her name is Estrella Hurtado. 
-
 ```
 
+## Instagram Data
+```{r}
+## This data comes from website known as Kaggle.com. In the data there is information about username, followers, following, likes, comments and location. Something interesting about this data is that I found activity overview like likes, comments in past 30 days. 
+```
+
+## Few Questions
+```{r}
+
+## 1) List of high followers
+## 2) when do post get the most engagement? 
+## 3) Do pictures or videos get more engagement? 
+## 4) what types of accounts have the most followers?
+
+
+```
 
