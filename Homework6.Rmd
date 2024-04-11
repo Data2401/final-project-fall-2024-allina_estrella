@@ -22,7 +22,7 @@ When you click the **Knit** button a document will be generated that includes bo
 
 ## Instagram Data
 ```{r}
-## This data comes from website known as Kaggle.com. In the data there is information about username, followers, following, likes, comments and location. Something interesting about this data is that I found activity overview like likes, comments in past 30 days. 
+## This data comes from website known as Kaggle.com. In the data there is information about username, followers, following, likes, comments and location. Something interesting about this data is that it has a large sample of diffrent accounts where we can draw assumptions about patterns seen in the engagement scores.  
 ```
 
 ## Few Questions
