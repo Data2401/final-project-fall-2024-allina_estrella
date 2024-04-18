@@ -1,0 +1,25 @@
+---
+title: "Final Project - Instagram Data"
+author: "Estrella Hurtado"
+date: "2024-04-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+#Instagram Data Title Goes Here
+
+```{r cars}
+insta_data <- read_csv("instagram_data.csv")
+glimpse(insta_data)
+```
+
+```{r}
+new_data<- insta_data %>% mutate(likes_engament = (((likes+comments)/followers)*100),follower_quantile = ntile(followers,4))
+
+```
+
+
