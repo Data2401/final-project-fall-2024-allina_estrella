@@ -5,9 +5,10 @@ date: "2024-04-04"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=TRUE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+library(lubridate)
 ```
 
 #Instagram Data Title Goes Here
@@ -16,10 +17,45 @@ library(tidyverse)
 insta_data <- read_csv("instagram_data.csv")
 glimpse(insta_data)
 ```
-
+Create new columns with calculated values
 ```{r}
-new_data<- insta_data %>% mutate(likes_engament = (((likes+comments)/followers)*100),follower_quantile = ntile(followers,4))
+new_data<- insta_data %>% mutate(engagement = round((((likes+comments)/followers)*100),digits = 2),
+                                 follower_quantile = ntile(followers,4),
+                                 engagement_quantile = ntile(engagement,4),
+                                 post_timestamp = as_datetime(created_at),
+                                 post_time = format(round(post_timestamp,units = "hours"),format = "%H:%M"))
+```
+
+When do posts get the most engagement?
+```{r}
+new_data %>% ggplot(aes(x = engagement,y = post_time,rm.na = T)) +geom_col() +
+  scale_x_continuous(labels = waiver()) +
+  labs(y = NULL, x = "Engagement")
+```
+
+
+do pictures of videos get more engagement?
+```{r}
+new_data %>% ggplot(aes(x = engagement,y = post_time,rm.na = T)) +geom_col() +
+  scale_x_continuous(labels = waiver()) +
+  labs(y = NULL, x = "Engagement")
+```
+
+
+#change
+```{r}
+filter(new_data,engagement_quantile == 4)
+
 
 ```
 
+#do pictures of videos get more engagement?
+```{r}
+
+```
+
+#what types of accounts have the most followers?
+```{r}
+
+```
 
