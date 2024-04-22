@@ -35,7 +35,7 @@ new_data<- insta_data %>% mutate(engagement = round((((likes+comments)/followers
 
 ```
 
-## Mutated data glimpse
+## Mutated data glimpse  
 ```{r}
 glimpse(new_data)
 ```
