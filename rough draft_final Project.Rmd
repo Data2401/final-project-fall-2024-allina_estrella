@@ -4,7 +4,7 @@ author: "Estrella Hurtado"
 date: "2024-04-04"
 output: html_document
 ---
-Introduction
+## Introduction
 Where we got the data
 What categories we used. (followers buckets, caption lengths, keyword buckets)
 
@@ -13,31 +13,38 @@ What categories we used. (followers buckets, caption lengths, keyword buckets)
 knitr::opts_chunk$set(warning = FALSE,message = FALSE)
 library(tidyverse)
 library(lubridate)
+library(dplyr)
+install.packages("akc")
+library(akc)
 ```
 
-#Instagram Data Title Goes Here
+## Our Data
 
 ```{r}
 insta_data <- read_csv("instagram_data.csv")
 glimpse(insta_data)
 ```
 
-Create new columns with calculated values
+Created new columns with calculated values
 ```{r}
 new_data<- insta_data %>% mutate(engagement = round((((likes+comments)/followers)*100),digits = 2),
                                  follower_quantile = ntile(followers,4),
                                  engagement_quantile = ntile(engagement,4),
                                  post_timestamp = as_datetime(created_at),
                                  post_time = format(round(post_timestamp,units = "hours"),format = "%H:%M"),caption_length = lengths(strsplit(caption, ' ')))
+
 ```
 
+## Mutated data glimpse
 ```{r}
 glimpse(new_data)
 ```
 
-When do posts get the most engagement?
+## Instagram engagement trends
 
-We see the most engagement between the hours of 4PM and 9PM
+> *When do posts get the most engagement?
+
+We see the most engagement between the hours of 4PM and 7PM
 ```{r}
 new_data %>% ggplot(aes(x = engagement,y = post_time, na.rm = T)) +geom_col() +
   scale_x_continuous(labels = waiver()) +
@@ -45,19 +52,25 @@ new_data %>% ggplot(aes(x = engagement,y = post_time, na.rm = T)) +geom_col() +
 ```
 
 
-Based on the highest engagement, what trends to we see?
+Based on posts with the highest engagement, what trends to we see?
 density plot
 
-
 ```{r}
-new_data %>% ggplot(aes(x = engagement)) +geom_histogram() +labs(y = NULL, x = "Engagement")
+
+new_data %>% filter(engagement_quantile==4) %>% ggplot(aes(x = caption_length)) +geom_histogram() +labs(y = NULL, x = "Rename this")
 ```
 
 
-Relationship between string lengths and engagement
-Highest engaments posts include captions with lenghts x & y
+Relationship between caption lengths and engagement
+
+Highest engagement posts include captions with lengths x & y
+
 ```{r}
-new_data %>% filter(engagement_quantile==4) %>% ggplot(aes(x = engagement,y = caption_length,na.rm = T)) +geom_line() +
+new_data %>% mutate(caption_bucket = ntile(caption_length,4)) %>% group_by(caption_bucket) %>% summarise(mean(engagement,na.rm=T))
+```
+
+```{r}
+new_data %>% ggplot(aes(x = engagement,y = caption_length,na.rm = T)) +geom_point() +
   labs(y = NULL, x = "Engagement")+ scale_y_log10() + scale_x_log10()
 ```
 
@@ -73,7 +86,9 @@ new_data %>% ggplot(aes(x = likes, y = comments, color = is_video)) + geom_point
 #what types of accounts have the most followers?
 Count keywords in captions and categorize engagement
 ```{r}
-
+new_data %>% keyword_clean() %>%
+  pull(keyword) %>%
+  make_dict() -> my_dict
 ```
 
 
