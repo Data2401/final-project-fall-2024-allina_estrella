@@ -85,10 +85,6 @@ new_data %>% ggplot(aes(x = likes, y = comments, color = is_video)) + geom_point
 
 #what types of accounts have the most followers?
 Count keywords in captions and categorize engagement
-```{r}
-new_data %>% keyword_clean() %>%
-  pull(keyword) %>%
-  make_dict() -> my_dict
-```
+
 
 
