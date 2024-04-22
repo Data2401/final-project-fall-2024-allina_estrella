@@ -13,9 +13,6 @@ What categories we used. (followers buckets, caption lengths, keyword buckets)
 knitr::opts_chunk$set(warning = FALSE,message = FALSE)
 library(tidyverse)
 library(lubridate)
-library(dplyr)
-install.packages("akc")
-library(akc)
 ```
 
 ## Our Data
