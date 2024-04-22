@@ -1,12 +1,14 @@
 ---
 title: "Final Project - Instagram Data"
-author: "Estrella Hurtado"
+author: "Estrella Hurtado, Alina Valliani"
 date: "2024-04-04"
 output: html_document
 ---
+
 ## Introduction
-Where we got the data
-What categories we used. (followers buckets, caption lengths, keyword buckets)
+
+Our data is derived from Instagram accounts and comes from the website known as Kaggle.com. The data contains usernames, followers, followers, likes, comments, and locations for different accounts. This data is interesting because it has a large sample of different accounts where we can draw conclusions about patterns in engagement scores. In the data, we used some categories, such as followers, buckets, caption lengths, and keyword buckets.  
+
 
 
 ```{r setup, include=TRUE,message=FALSE}
@@ -15,14 +17,24 @@ library(tidyverse)
 library(lubridate)
 ```
 
+
 ## Our Data
+
+Below is our original data. 
+
 
 ```{r}
 insta_data <- read_csv("instagram_data.csv")
 glimpse(insta_data)
 ```
 
-Created new columns with calculated values
+
+## New Calculated Values
+
+
+We used the code below to create new columns with calculated values. 
+
+
 ```{r}
 new_data<- insta_data %>% mutate(engagement = round((((likes+comments)/followers)*100),digits = 2),
                                  follower_quantile = ntile(followers,4),
@@ -32,16 +44,21 @@ new_data<- insta_data %>% mutate(engagement = round((((likes+comments)/followers
 
 ```
 
-## Mutated data glimpse  
+
+## Mutated data glimpse 
+
+
 ```{r}
 glimpse(new_data)
 ```
 
-## Instagram engagement trends
 
-> *When do posts get the most engagement?
+### Instagram Highest Engagement
 
-We see the most engagement between the hours of 4PM and 7PM
+
+From our below code, we answered the question that When do posts get the most engagement? We emphasized that the most engagement of different Instagram accounts happen between the afternoon hours of 4PM and 7PM. 
+
+
 ```{r}
 new_data %>% ggplot(aes(x = engagement,y = post_time, na.rm = T)) +geom_col() +
   scale_x_continuous(labels = waiver()) +
@@ -49,8 +66,12 @@ new_data %>% ggplot(aes(x = engagement,y = post_time, na.rm = T)) +geom_col() +
 ```
 
 
-Based on posts with the highest engagement, what trends to we see?
-density plot
+
+### Density Plot 
+
+
+From our code below, we answered question that what trends do we see based on posts with the highest engagement. We used the density plot. We observed from the density plot that the highest it go is above 600. 
+
 
 ```{r}
 
@@ -58,13 +79,21 @@ new_data %>% filter(engagement_quantile==4) %>% ggplot(aes(x = caption_length)) 
 ```
 
 
-Relationship between caption lengths and engagement
 
-Highest engagement posts include captions with lengths x & y
+## Relationship between Caption Lengths and Engagement
+
+
+Caption length is the number of characters in a social media post's caption. We used the below code to answered that what is the relationship between caption length and engagement. We observed tat the highest engagement posts include captions with lengths x & y. In the code below, 1 caption bucket is the account with lowest followers, and have highest caption length whereas 4 caption bucket is the account with highest followers, and have lowest caption length.
+
+
 
 ```{r}
 new_data %>% mutate(caption_bucket = ntile(caption_length,4)) %>% group_by(caption_bucket) %>% summarise(mean(engagement,na.rm=T))
 ```
+
+
+Below code emphasized the graph to demonstrate the highest and lowest caption length. 
+
 
 ```{r}
 new_data %>% ggplot(aes(x = engagement,y = caption_length,na.rm = T)) +geom_point() +
@@ -72,16 +101,17 @@ new_data %>% ggplot(aes(x = engagement,y = caption_length,na.rm = T)) +geom_poin
 ```
 
 
-do pictures or videos get more engagement?
-We see pictures get more engagement
+## Pictures or Videos 
+
+
+Below code emphasized that from pictures or videos which get more engagement? By looking at the output of the code we see that the pictures get more engagement.
+
+
 ```{r}
 new_data %>% ggplot(aes(x = likes, y = comments, color = is_video)) + geom_point() +scale_y_log10() + scale_x_log10()
 ```
 
 
-
 #what types of accounts have the most followers?
 Count keywords in captions and categorize engagement
-
-
 
