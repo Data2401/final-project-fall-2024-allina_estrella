@@ -13,6 +13,10 @@ What categories we used. (followers buckets, caption lengths, keyword buckets)
 knitr::opts_chunk$set(warning = FALSE,message = FALSE)
 library(tidyverse)
 library(lubridate)
+library(stringr)
+library(dplyr)
+install.packages('fuzzyjoin')
+library(fuzzyjoin)
 ```
 
 ## Our Data
@@ -36,8 +40,18 @@ new_data<- insta_data %>% mutate(engagement = round((((likes+comments)/followers
 ```{r}
 glimpse(new_data)
 ```
+Insights on the account follower distribution
+```{r}
+summary(new_data$followers)
+```
+
 
 ## Instagram engagement trends
+
+engagement vs. follower count bucket
+
+single image vs. single video, vs. carousel_album
+
 
 > *When do posts get the most engagement?
 
@@ -54,7 +68,9 @@ density plot
 
 ```{r}
 
-new_data %>% filter(engagement_quantile==4) %>% ggplot(aes(x = caption_length)) +geom_histogram() +labs(y = NULL, x = "Rename this")
+new_data %>% 
+  filter(engagement_quantile==4) %>% 
+  ggplot(aes(x = caption_length)) +geom_histogram() +labs(y = NULL, x = "Rename this")
 ```
 
 
@@ -63,11 +79,15 @@ Relationship between caption lengths and engagement
 Highest engagement posts include captions with lengths x & y
 
 ```{r}
-new_data %>% mutate(caption_bucket = ntile(caption_length,4)) %>% group_by(caption_bucket) %>% summarise(mean(engagement,na.rm=T))
+new_data %>% 
+  mutate(caption_bucket = ntile(caption_length,4)) %>% 
+  group_by(caption_bucket) %>% 
+  summarise(mean(engagement,na.rm=T))
 ```
 
 ```{r}
-new_data %>% ggplot(aes(x = engagement,y = caption_length,na.rm = T)) +geom_point() +
+new_data %>% 
+  ggplot(aes(x = engagement,y = caption_length,na.rm = T)) +geom_point() +
   labs(y = NULL, x = "Engagement")+ scale_y_log10() + scale_x_log10()
 ```
 
@@ -75,13 +95,29 @@ new_data %>% ggplot(aes(x = engagement,y = caption_length,na.rm = T)) +geom_poin
 do pictures or videos get more engagement?
 We see pictures get more engagement
 ```{r}
-new_data %>% ggplot(aes(x = likes, y = comments, color = is_video)) + geom_point() +scale_y_log10() + scale_x_log10()
+new_data %>% 
+  ggplot(aes(x = likes, y = comments, color = is_video)) + geom_point() +scale_y_log10() + scale_x_log10()
 ```
 
 
 
 #what types of accounts have the most followers?
 Count keywords in captions and categorize engagement
+```{r}
+terms <- c('travel','food','drink','trip','brunch','makeup','beauty','hair','tutorial','webinar','course','journalism','inform','vacation','photography','wildlife','cake','episode','artist','story','reel','carousel','video','halloween','valentine','christmas','climate','communities',' art ','nature','mountain','country','hills','book','home','car','weekend','dress','baby','gym','fitness','dogs',' cats',' cat ',' dog ','fashion','birthday','goal','adventure','new york','camera','#ad ','hotel','flight',' eat ','music','garden','health','wellness','winter','new year','holiday','outfit')
 
+term_regex <- paste0('(',paste(terms,collapse ='|'),')')
+
+keyword_addition <- new_data %>%
+  mutate(caption = tolower(caption),keywordtag = sapply(str_extract_all(caption,term_regex),function(x)paste0(x,collapse = ',')))
+
+summarise(keyword_addition,owner_username,caption,keywordtag)
+```
+
+```{r}
+categoryDF <- data.frame(SearchTerm = c("travel","hotel","makeup","fashion"),
+                         NewCategory = c("Travel","Travel","Beauty","Beauty"))
+left_join(keyword_addition,categoryDF,by = c(keywordtag = "SearchTerm"))
+```
 
 
