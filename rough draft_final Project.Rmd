@@ -1,6 +1,6 @@
 ---
 title: "Final Project - Instagram Data"
-author: "Estrella Hurtado"
+author: "Estrella Hurtado & Allina Valliani"
 date: "2024-04-04"
 output: html_document
 ---
@@ -15,8 +15,6 @@ library(tidyverse)
 library(lubridate)
 library(stringr)
 library(dplyr)
-install.packages('fuzzyjoin')
-library(fuzzyjoin)
 ```
 
 ## Our Data
