@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ---
 title: "Final Project - Instagram Data"
 author: "Estrella Hurtado & Alina Valliani"
@@ -6,8 +5,9 @@ date: "2024-04-04"
 output: html_document
 ---
 ## Introduction
-Where we got the data
-What categories we used. (followers buckets, caption lengths, keyword buckets)
+
+Our data is derived from Instagram accounts and comes from the website known as Kaggle.com. The data contains usernames, followers, followers, likes, comments, and locations for different accounts. This data is interesting because it has a large sample of different accounts where we can draw conclusions about patterns in engagement scores. In the data, we used some categories, such as followers, buckets, caption lengths, and keyword buckets.  
+
 
 
 ```{r setup, include=TRUE,message=FALSE}
@@ -19,7 +19,7 @@ library(dplyr)
 library(plotly)
 ```
 
-## Imported Data
+## Unfiltered Data
 
 ```{r}
 insta_data <- read_csv("instagram_data.csv")
@@ -27,8 +27,10 @@ glimpse(insta_data)
 ```
 
 
-# Mutated columns
-Created new columns with calculated values
+## Mutated columns
+
+We added new columns representing 1 as the lowest followers, 2 and 3 as the average followers and the 4 as the highest followers. 
+
 ```{r}
 new_data<- insta_data %>% mutate(engagement = round((((likes+comments)/followers)*100),digits = 2),
                                  follower_quantile = ntile(followers,4),
@@ -38,20 +40,36 @@ new_data<- insta_data %>% mutate(engagement = round((((likes+comments)/followers
 
 ```
 
-## Mutated data glimpse  
+## Filtered Data  
+
+New columns with new calculated values. 
+
 ```{r}
 glimpse(new_data)
 ```
-## Account Follower Distribution
-Insights on the account follower distribution 1 is the lowest, 4 the highest
+
+
+## Reference of Account Followers Distribution 
+
+Insights on the account follower distribution 1 is the lowest, 4 is the highest. 
+
 ```{r}
 new_data %>% group_by(follower_quantile) %>% summarise(follower_mean = format(round(mean(followers),0),big.mark=','))
 ```
 
 
-## Instagram engagement trends
+## Instagram Engagement Trends
 
-engagement vs. follower count bucket
+
+
+
+### What trends do we see based on posts with the highest engagement? 
+
+
+Low amount of followers have the highest engagement whereas high amount of followers have the lowest engagement. 
+
+
+
 ```{r}
 new_data %>% filter(engagement != is.na(engagement)) %>% 
   group_by(follower_quantile) %>% summarise(avg_eng = mean(engagement)) %>% 
@@ -59,15 +77,26 @@ new_data %>% filter(engagement != is.na(engagement)) %>%
   geom_line() + labs(x='Follower Count Quartile',y = 'Average Engagement')
 ```
 
-## Post time vs Engament
+
+### When do posts get the most engagement?
+
+
 
 ```{r}
 new_data %>% filter(engagement != is.na(engagement)) %>% group_by(post_time) %>% summarise(mean(engagement),n())
 ```
 
-> *When do posts get the most engagement?
 
-We see the most engagement between the hours of 5AM, 8AM, 12 PM, 1 PM, 4PM and 5PM, During peak times of the day. This is showing avg engagement% by post local time
+This is showing avg engagement percent by post local time. 
+
+
+
+### Reference of the Post Engagement
+
+
+We see the most engagement between the hours of 5AM, 8AM, 12 PM, 1 PM, 4PM and 5PM, during peak times of the day. 
+
+
 
 ```{r}
 time_eng <- new_data %>% filter(engagement != is.na(engagement)) %>% group_by(post_time) %>% summarise(eng_mean = round(mean(engagement),1)) %>% 
@@ -80,19 +109,29 @@ time_eng <- new_data %>% filter(engagement != is.na(engagement)) %>% group_by(po
 ggplotly(time_eng)
 ```
 
-##Relationship between caption lengths and engagement
 
-Highest engagement posts include captions with lengths x & y
+### What is the relationship between caption length and engagement?
+
+
+Highest engagement posts include captions with lengths x & y. 
+
+
+
 ```{r}
 new_data %>% filter(engagement != is.na(engagement)) %>% 
   mutate(caption_bucket = case_when(caption_length < 50 ~"<50",caption_length >=50 & caption_length<100~"50-100",caption_length>=100 & caption_length < 150 ~ "100-150",caption_length>=150 & caption_length < 200 ~ "150-200",caption_length>=200 & caption_length < 250 ~ "200-250",caption_length>=250 & caption_length < 300 ~ "250-300",caption_length>=300 & caption_length < 350 ~ "300-350",caption_length > 350 ~"350+")) %>% group_by(caption_bucket) %>%
   summarise(avg_eng = mean(engagement)) %>% ggplot(aes(x = caption_bucket,y = avg_eng))+geom_point(size = 5) + labs(x = "Caption Length",y = "Average Engagement")+ scale_x_discrete(limits = c("<50","50-100","100-150","150-200","200-250","250-300","300-350","350+"))
 ```
 
-##Pictures/Videos/Carousel vs. Engagement
 
-Do pictures or videos get more engagement?
-Clearly single images get more engagement and carousels get less
+
+### From pictures, carousel and videos which one get the most highest engagement? 
+
+
+
+Clearly single images get more engagement whereas, carousels get less. 
+
+
 
 ```{r}
 new_data %>% filter(engagement != is.na(engagement)) %>% mutate(type = case_when(is_video == TRUE & multiple_images == FALSE ~"Video",
@@ -103,7 +142,15 @@ new_data %>% filter(engagement != is.na(engagement)) %>% mutate(type = case_when
   geom_col() + labs(x = 'Content Type',y = 'Average Engagement')
 ```
 
-We see pictures get more engagement
+
+### From pictures and videos which one get the most comment and likes? 
+
+
+
+We see pictures get more comments and likes than videos. 
+
+
+
 ```{r}
 new_data %>% 
   ggplot(aes(x = likes, y = comments, group = is_video, color = is_video)) + geom_point() +scale_y_log10() + scale_x_log10() + scale_color_manual(name = "Type", labels = c("Picture", "Video"),values = c("blue","red"))
