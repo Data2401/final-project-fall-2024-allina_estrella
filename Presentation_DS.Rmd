@@ -1,27 +1,61 @@
 ---
 title:  Instagram Data
 author: "Estrella Hurtado\n\n\n Alina Valliani"
-date: April 22, 2024
+date: April 25, 2024
 output: slidy_presentation
 ---
 
+
 ## Introduction
 
-Our data is derived from Instagram accounts and comes from the website known as Kaggle.com. The data contains usernames, followers, followers, likes, comments, and locations for different accounts. This data is interesting because it has a large sample of different accounts where we can draw conclusions about patterns in engagement scores. In the data, we used some categories, such as followers, buckets, caption lengths, and keyword buckets.  
+Our data is derived from Instagram accounts and comes from the website known as Kaggle.com. 
+
+Our data contains usernames, followings, followers, likes, comments, and locations of different accounts. 
+
+We added some columns in our data such as engagement, engagement_quantile, post_timestamp, and caption_length. 
+
+This data is interesting because it has a large sample of different accounts where we can draw conclusions about patterns in engagement scores. 
+We also compare and contrast some things from our data. 
+
+* A Link to the data https://www.kaggle.com/datasets/propriyam/instagram-data
 
 
 
-```{r setup, include=TRUE,message=FALSE}
+## Problem Statement and Questions
+
+We choose this data to understand Instagram engagement trends and the factors which contributes to post and videos. 
+
+* What trends do we see based on posts with the highest engagement? 
+* When do posts get the most engagement?
+* What is the relationship between caption length and engagement?
+* From pictures, carousel, and videos which one get the most highest engagement? 
+* From pictures and videos which one get the most comments and likes? 
+
+
+## What Libraries did we use?
+
+
+```{r setup, include=TRUE,message=FALSE,echo=FALSE}
 knitr::opts_chunk$set(warning = FALSE,message = FALSE)
 library(tidyverse)
 library(lubridate)
+library(stringr)
+library(dplyr)
+library(plotly)
 ```
 
+* library(tidyverse)  Use to filter the data. 
 
-## Our Data
+* library(lubridate)  Use to format dates.
 
-Below is our original data. 
+* library(stringr) Use to provides a set of functions designed to make work with strings.
 
+* library(dplyr) Use to provide a function for each basic verb of data manipulation.
+
+* library(plotly) Use to make interactive graphs. 
+
+
+## Lets take a look at Unfiltered Data
 
 ```{r}
 insta_data <- read_csv("instagram_data.csv")
@@ -29,10 +63,22 @@ glimpse(insta_data)
 ```
 
 
-## New Calculated Values
+
+## Mutated Columns
 
 
-We used the code below to create new columns with calculated values. 
+### Key terms 
+
+- Engagement refers to the actual score from the data. 
+
+- engagement_quantile refers to the follower count divided into four different quarters. 
+
+- post_timestamp refers to the time when pictures or videos was posted. 
+
+- caption_length refers to the length of the caption. 
+
+
+(Added new columns which represent 1 as the lowest followers, 2 and 3 as the average followers and the 4 as the highest followers). 
 
 
 ```{r}
@@ -40,197 +86,131 @@ new_data<- insta_data %>% mutate(engagement = round((((likes+comments)/followers
                                  follower_quantile = ntile(followers,4),
                                  engagement_quantile = ntile(engagement,4),
                                  post_timestamp = as_datetime(created_at),
-                                 post_time = format(round(post_timestamp,units = "hours"),format = "%H:%M"),caption_length = lengths(strsplit(caption, ' ')))
+                                 post_time = format(round(post_timestamp,units = "hours"),format = "%H:%M"),
+                                 caption_length = lengths(strsplit(caption, ' ')))
 
 ```
 
 
-## Mutated data glimpse 
 
+## Filtered Data  
+
+Our original data was messed up so we added new columns with calculated values. 
 
 ```{r}
 glimpse(new_data)
 ```
 
 
-### Instagram Highest Engagement
+## Key terms
+
+* is_video refers to the videos posted on Instagram account.  
+* caption refers to the titles on the Instagram posts. 
+* comments/likes refers to the followers response to the posts.         
+* created_at refers to the coded time stamp of when the post was created. 
+* multiple_images refers to the boolean of whether the post was a carousel or multiple image upload. 
+* followers/following refers to the users. 
 
 
-From our below code, we answered the question that When do posts get the most engagement? We emphasized that the most engagement of different Instagram accounts happen between the afternoon hours of 4PM and 7PM. 
+## Reference of Account Followers Distribution 
+
+Insights on the account follower distribution mean 1 is the lowest, 4 is the highest. 
+
+```{r}
+new_data %>% group_by(follower_quantile) %>% summarise(follower_mean = format(round(mean(followers),0),big.mark=','))
+```
+
+
+
+## What trends do we see based on posts with the highest engagement? 
+
+
+Low amount of followers have the highest engagement whereas high amount of followers have the lowest engagement. 
 
 
 ```{r}
-new_data %>% ggplot(aes(x = engagement,y = post_time, na.rm = T)) +geom_col() +
+new_data %>% filter(engagement != is.na(engagement)) %>% 
+  group_by(follower_quantile) %>% summarise(avg_eng = mean(engagement)) %>% 
+  ggplot(aes(x = follower_quantile,y = avg_eng)) +
+  geom_line() + labs(x='Follower Count Quartile',y = 'Average Engagement')
+```
+
+
+## When do posts get the most engagement?
+
+This is showing average engagement percent by post local time. 
+
+```{r}
+new_data %>% filter(engagement != is.na(engagement)) %>% group_by(post_time) %>% summarise(mean(engagement),n())
+```
+
+
+## Reference of the Post Engagement
+
+We see the most engagement between the hours of 5am, 8am, 12pm, 1pm, 4pm and 5pm, during peak times of the day. 
+
+```{r}
+time_eng <- new_data %>% filter(engagement != is.na(engagement)) %>% group_by(post_time) %>% summarise(eng_mean = round(mean(engagement),1)) %>% 
+  ggplot(aes(x = eng_mean,y = post_time,fill = as.factor(post_time))) +
+  geom_col(stat = 'identity') +
   scale_x_continuous(labels = waiver()) +
-  labs(y = NULL, x = "Engagement")
+  labs(y = 'Posting Time', x = "Avg Engagement %") +
+  scale_fill_manual(values = c('05:00'="tomato",'08:00'="tomato",'12:00'="tomato",'13:00'="tomato",'16:00'="tomato",'17:00'="tomato"), guide = FALSE)
+
+ggplotly(time_eng)
 ```
 
 
+## What is the relationship between caption length and engagement?
 
-### Density Plot 
-
-
-From our code below, we answered question that what trends do we see based on posts with the highest engagement. We used the density plot. We observed from the density plot that the highest it go is above 600. 
+Highest engagement posts include captions with lengths x & y. 
+The graph shows that the long caption gains more engagement. 
 
 
 ```{r}
-
-new_data %>% filter(engagement_quantile==4) %>% ggplot(aes(x = caption_length)) +geom_histogram() +labs(y = NULL, x = "Rename this")
+new_data %>% filter(engagement != is.na(engagement)) %>% 
+  mutate(caption_bucket = case_when(caption_length < 50 ~"<50",caption_length >=50 & caption_length<100~"50-100",caption_length>=100 & caption_length < 150 ~ "100-150",caption_length>=150 & caption_length < 200 ~ "150-200",caption_length>=200 & caption_length < 250 ~ "200-250",caption_length>=250 & caption_length < 300 ~ "250-300",caption_length>=300 & caption_length < 350 ~ "300-350",caption_length > 350 ~"350+")) %>% group_by(caption_bucket) %>%
+  summarise(avg_eng = mean(engagement)) %>% ggplot(aes(x = caption_bucket,y = avg_eng))+geom_point(size = 5) + labs(x = "Caption Length",y = "Average Engagement")+ scale_x_discrete(limits = c("<50","50-100","100-150","150-200","200-250","250-300","300-350","350+"))
 ```
 
 
 
-## Relationship between Caption Lengths and Engagement
+## From pictures, carousel and videos which one get the most highest engagement? 
 
-
-Caption length is the number of characters in a social media post's caption. We used the below code to answered that what is the relationship between caption length and engagement. We observed tat the highest engagement posts include captions with lengths x & y. In the code below, 1 caption bucket is the account with lowest followers, and have highest caption length whereas 4 caption bucket is the account with highest followers, and have lowest caption length.
-
+The graph clearly show that the single images get more engagement whereas, carousels get less. 
 
 
 ```{r}
-new_data %>% mutate(caption_bucket = ntile(caption_length,4)) %>% group_by(caption_bucket) %>% summarise(mean(engagement,na.rm=T))
+new_data %>% filter(engagement != is.na(engagement)) %>% mutate(type = case_when(is_video == TRUE & multiple_images == FALSE ~"Video",
+                                    is_video == FALSE & multiple_images == FALSE ~ "Picture",
+                                    multiple_images == TRUE ~ "Carousel")) %>% 
+  group_by(type) %>% summarise(avg_eng = mean(engagement)) %>% 
+  ggplot(aes(x = type,y = avg_eng))+
+  geom_col() + labs(x = 'Content Type',y = 'Average Engagement')
 ```
 
 
-Below code emphasized the graph to demonstrate the highest and lowest caption length. 
+## From pictures and videos which one get the most comment and likes? 
 
+We see pictures get more comments and likes than videos. 
 
 ```{r}
-new_data %>% ggplot(aes(x = engagement,y = caption_length,na.rm = T)) +geom_point() +
-  labs(y = NULL, x = "Engagement")+ scale_y_log10() + scale_x_log10()
+new_data %>% 
+  ggplot(aes(x = likes, y = comments, group = is_video, color = is_video)) + geom_point() +scale_y_log10() + scale_x_log10() + scale_color_manual(name = "Type", labels = c("Picture", "Video"),values = c("blue","red"))
 ```
 
 
-## Pictures or Videos 
+## Summary
 
+In summary, our presentation emphasized that our Instragram accounts data have following: 
 
-Below code emphasized that from pictures or videos which get more engagement? By looking at the output of the code we see that the pictures get more engagement.
+* Highest engagement posts have lowest followers. 
 
+* Highest engagement posts happen between afternoon hours. 
 
-```{r}
-new_data %>% ggplot(aes(x = likes, y = comments, color = is_video)) + geom_point() +scale_y_log10() + scale_x_log10()
-```
+* Highest engagement posts have long captions. 
 
+* Single images get more engagement than carousels. 
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
-```
-
-## Introduction
-
-Our data is derived from Instagram accounts and comes from the website known as Kaggle.com. The data contains usernames, followers, followers, likes, comments, and locations for different accounts. This data is interesting because it has a large sample of different accounts where we can draw conclusions about patterns in engagement scores. In the data, we used some categories, such as followers, buckets, caption lengths, and keyword buckets.  
-
-* A Link to the data https://www.kaggle.com/datasets/propriyam/instagram-data
-
-
-## Problem Statement and Questions
-
-To understand Instagram engagement trends and the factors contributing to post and videos. 
-
-When do posts get the most engagement?
-What trends do we see based on posts with the highest engagement? 
-What is the relationship between caption length and engagement?
-From pictures and videos which one get the most highest engagement? 
-What types of accounts have the most followers?
-
-
-## What Libraries did you use?
-
-* library(tidyverse)  Use to tidy and filter the data with dplyr. 
-
-* library(lubridate)  Use to formate dates.
-
-* library(stringr) Use to provides a set of functions designed to make work with strings.
-
-* library(dplyr) Use to provide a function for each basic verb of data manipulation.
-
-## Let’s take a look at the unfiltered data
-
-
-
-
-## Key Terms
-
-* owner username: 
-* is_video: 
-* caption:        
-* comments:          
-* likes: 
-
-## Instagram Accounts 
-
-* We created new columns with new calculated values. 
-
-1 represents the account with the lowest followers. 
-
-2, 3 represents the account with the average followers.
-
-4 represents the account with the highest followers. 
-
-## Instagram Highest Engagement 
-
-### When do posts get the most engagement? 
-
-
-
-
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
-```
-
-## Introduction
-
-Our data is derived from Instagram accounts and comes from the website known as Kaggle.com. The data contains usernames, followers, followers, likes, comments, and locations for different accounts. This data is interesting because it has a large sample of different accounts where we can draw conclusions about patterns in engagement scores. In the data, we used some categories, such as followers, buckets, caption lengths, and keyword buckets.  
-
-* A Link to the data https://www.kaggle.com/datasets/propriyam/instagram-data
-
-
-## Problem Statement and Questions
-
-To understand Instagram engagement trends and the factors contributing to post and videos. 
-
-When do posts get the most engagement?
-What trends do we see based on posts with the highest engagement? 
-What is the relationship between caption length and engagement?
-From pictures and videos which one get the most highest engagement? 
-What types of accounts have the most followers?
-
-
-## What Libraries did you use?
-
-* library(tidyverse)  Use to tidy and filter the data with dplyr. 
-
-* library(lubridate)  Use to formate dates.
-
-* library(stringr) Use to provides a set of functions designed to make work with strings.
-
-* library(dplyr) Use to provide a function for each basic verb of data manipulation.
-
-## Let’s take a look at the unfiltered data
-
-
-
-
-## Key Terms
-
-* owner username: 
-* is_video: 
-* caption:        
-* comments:          
-* likes: 
-
-## Instagram Accounts 
-
-* We created new columns with new calculated values. 
-
-1 represents the account with the lowest followers. 
-
-2, 3 represents the account with the average followers.
-
-4 represents the account with the highest followers. 
-
-## Instagram Highest Engagement 
-
-### When do posts get the most engagement? 
+* Pictures get more likes and comments than videos. 
 
