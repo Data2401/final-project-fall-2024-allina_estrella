@@ -129,7 +129,7 @@ glimpse(new_data)
 
 ## Reference of Account Followers Distribution 
 
-Insights on the account follower distribution mean 1 is the lowest, 4 is the highest. 
+Insights on the average follower distribution meaning 1 is the lowest, 4 is the highest. 
 
 ```{r,echo=FALSE}
 new_data %>% group_by(follower_quantile) %>% summarise(follower_mean = format(round(mean(followers),0),big.mark=','))
@@ -180,7 +180,7 @@ ggplotly(time_eng)
 
 Highest engagement posts include captions with lengths x & y. 
 
-The graph shows that the long caption gains more engagement. 
+The graph shows that the short captions gains more engagement. 
 
 
 ```{r,echo=FALSE}
@@ -222,11 +222,11 @@ In summary, our presentation emphasized that our Instragram accounts data have f
 
 * Highest engagement posts have lowest followers. 
 
-* Highest engagement posts happen between afternoon hours. 
+* Highest engagement posts happen between early morning, noon and afternoon hours. 
 
-* Highest engagement posts have long captions. 
+* Highest engagement posts have short captions. 
 
-* Single images get more engagement than carousels. 
+* Single images get more engagement than carousels and videos. 
 
 * Pictures get more likes and comments than videos. 
 
