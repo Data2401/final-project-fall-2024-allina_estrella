@@ -53,12 +53,10 @@ new_data %>% group_by(follower_quantile) %>% summarise(follower_mean = format(ro
 
 engagement vs. follower count bucket
 ```{r}
-new_data %>%
-  group_by(follower_quantile)%>%
-  summarise(engagement)%>%
-  ggplot(aes(x = follower_quantile,y = engagement,na.rm=T))+
-  geom_line()
-
+new_data %>% filter(engagement != is.na(engagement)) %>% 
+  group_by(follower_quantile) %>% summarise(avg_eng = mean(engagement)) %>% 
+  ggplot(aes(x = follower_quantile,y = avg_eng)) +
+  geom_line() + labs(x='Follower Count Quartile',y = 'Average Engagement')
 ```
 
 ## Post time vs Engament
@@ -86,9 +84,9 @@ ggplotly(time_eng)
 
 Highest engagement posts include captions with lengths x & y
 ```{r}
-new_data %>% filter(engagement != is.na(engagement)) %>% mutate(caption_bucket = case_when(caption_length < 100 ~"<100",
-                              TRUE ~ "Other")) %>% group_by(caption_bucket) %>%
-  summarise(avg_eng = round(mean(engagement),1),na.rm = T)
+new_data %>% filter(engagement != is.na(engagement)) %>% 
+  mutate(caption_bucket = case_when(caption_length < 50 ~"<50",caption_length >=50 & caption_length<100~"50-100",caption_length>=100 & caption_length < 150 ~ "100-150",caption_length>=150 & caption_length < 200 ~ "150-200",caption_length>=200 & caption_length < 250 ~ "200-250",caption_length>=250 & caption_length < 300 ~ "250-300",caption_length>=300 & caption_length < 350 ~ "300-350",caption_length > 350 ~"350+")) %>% group_by(caption_bucket) %>%
+  summarise(avg_eng = mean(engagement)) %>% ggplot(aes(x = caption_bucket,y = avg_eng))+geom_point(size = 5) + labs(x = "Caption Length",y = "Average Engagement")+ scale_x_discrete(limits = c("<50","50-100","100-150","150-200","200-250","250-300","300-350","350+"))
 ```
 
 ##Pictures/Videos/Carousel vs. Engagement
@@ -102,32 +100,11 @@ new_data %>% filter(engagement != is.na(engagement)) %>% mutate(type = case_when
                                     multiple_images == TRUE ~ "Carousel")) %>% 
   group_by(type) %>% summarise(avg_eng = mean(engagement)) %>% 
   ggplot(aes(x = type,y = avg_eng))+
-  geom_col()
+  geom_col() + labs(x = 'Content Type',y = 'Average Engagement')
 ```
 
 We see pictures get more engagement
 ```{r}
 new_data %>% 
-  ggplot(aes(x = likes, y = comments, color = is_video)) + geom_point() +scale_y_log10() + scale_x_log10() + scale_fill_discrete(name = "Type", labels = c("Picture", "Video", "N/A"))
+  ggplot(aes(x = likes, y = comments, group = is_video, color = is_video)) + geom_point() +scale_y_log10() + scale_x_log10() + scale_color_manual(name = "Type", labels = c("Picture", "Video"),values = c("blue","red"))
 ```
-
-#what types of accounts have the most followers?
-Count keywords in captions and categorize engagement
-```{r}
-terms <- c('travel','food','drink','trip','brunch','makeup','beauty','hair','tutorial','webinar','course','journalism','inform','vacation','photography','wildlife','cake','episode','artist','story','reel','carousel','video','halloween','valentine','christmas','climate','communities',' art ','nature','mountain','country','hills','book','home','car','weekend','dress','baby','gym','fitness','dogs',' cats',' cat ',' dog ','fashion','birthday','goal','adventure','new york','camera','#ad ','hotel','flight',' eat ','music','garden','health','wellness','winter','new year','holiday','outfit')
-
-term_regex <- paste0('(',paste(terms,collapse ='|'),')')
-
-keyword_addition <- new_data %>%
-  mutate(caption = tolower(caption),keywordtag = sapply(str_extract_all(caption,term_regex),function(x)paste0(x,collapse = ',')))
-
-summarise(keyword_addition,owner_username,caption,keywordtag)
-```
-
-
-```{r}
-caption_catergories <- keyword_addition %>% mutate(case_when(keywordtag == "Travel"~"Travel"))
-```
-
-count of keywords used
-engagement distribution for each keyword
