@@ -69,13 +69,17 @@ glimpse(insta_data)
 
 ### Key terms 
 
-- Engagement refers to the actual score from the data. 
+**Engagement**
+- refers to the actual score from the data. 
 
-- engagement_quantile refers to the follower count divided into four different quarters. 
+**engagement_quantile**
+- refers to the follower count divided into four different quarters. 
 
-- post_timestamp refers to the time when pictures or videos was posted. 
+**post_timestamp**
+- refers to the time when pictures or videos was posted. 
 
-- caption_length refers to the length of the caption. 
+**caption_length**
+- refers to the length of the caption. 
 
 
 (Added new columns which represent 1 as the lowest followers, 2 and 3 as the average followers and the 4 as the highest followers). 
@@ -97,26 +101,37 @@ new_data<- insta_data %>% mutate(engagement = round((((likes+comments)/followers
 
 Our original data was messed up so we added new columns with calculated values. 
 
-```{r}
+```{r,echo=FALSE}
 glimpse(new_data)
 ```
 
 
 ## Key terms
 
-* is_video refers to the videos posted on Instagram account.  
-* caption refers to the titles on the Instagram posts. 
-* comments/likes refers to the followers response to the posts.         
-* created_at refers to the coded time stamp of when the post was created. 
-* multiple_images refers to the boolean of whether the post was a carousel or multiple image upload. 
-* followers/following refers to the users. 
+**is_video**
+- refers to the videos posted on Instagram account. 
+
+**caption** 
+- refers to the titles on the Instagram posts.
+
+**comments/likes** 
+- refers to the followers response to the posts.
+
+**created_at**
+- refers to the coded time stamp of when the post was created.
+
+**multiple_images**
+- refers to the boolean of whether the post was a carousel or multiple image upload. 
+
+**followers/following**
+- refers to the users. 
 
 
 ## Reference of Account Followers Distribution 
 
 Insights on the account follower distribution mean 1 is the lowest, 4 is the highest. 
 
-```{r}
+```{r,echo=FALSE}
 new_data %>% group_by(follower_quantile) %>% summarise(follower_mean = format(round(mean(followers),0),big.mark=','))
 ```
 
@@ -128,7 +143,7 @@ new_data %>% group_by(follower_quantile) %>% summarise(follower_mean = format(ro
 Low amount of followers have the highest engagement whereas high amount of followers have the lowest engagement. 
 
 
-```{r}
+```{r,echo=FALSE}
 new_data %>% filter(engagement != is.na(engagement)) %>% 
   group_by(follower_quantile) %>% summarise(avg_eng = mean(engagement)) %>% 
   ggplot(aes(x = follower_quantile,y = avg_eng)) +
@@ -140,7 +155,7 @@ new_data %>% filter(engagement != is.na(engagement)) %>%
 
 This is showing average engagement percent by post local time. 
 
-```{r}
+```{r,echo=FALSE}
 new_data %>% filter(engagement != is.na(engagement)) %>% group_by(post_time) %>% summarise(mean(engagement),n())
 ```
 
@@ -149,7 +164,7 @@ new_data %>% filter(engagement != is.na(engagement)) %>% group_by(post_time) %>%
 
 We see the most engagement between the hours of 5am, 8am, 12pm, 1pm, 4pm and 5pm, during peak times of the day. 
 
-```{r}
+```{r,echo=FALSE}
 time_eng <- new_data %>% filter(engagement != is.na(engagement)) %>% group_by(post_time) %>% summarise(eng_mean = round(mean(engagement),1)) %>% 
   ggplot(aes(x = eng_mean,y = post_time,fill = as.factor(post_time))) +
   geom_col(stat = 'identity') +
@@ -164,10 +179,11 @@ ggplotly(time_eng)
 ## What is the relationship between caption length and engagement?
 
 Highest engagement posts include captions with lengths x & y. 
+
 The graph shows that the long caption gains more engagement. 
 
 
-```{r}
+```{r,echo=FALSE}
 new_data %>% filter(engagement != is.na(engagement)) %>% 
   mutate(caption_bucket = case_when(caption_length < 50 ~"<50",caption_length >=50 & caption_length<100~"50-100",caption_length>=100 & caption_length < 150 ~ "100-150",caption_length>=150 & caption_length < 200 ~ "150-200",caption_length>=200 & caption_length < 250 ~ "200-250",caption_length>=250 & caption_length < 300 ~ "250-300",caption_length>=300 & caption_length < 350 ~ "300-350",caption_length > 350 ~"350+")) %>% group_by(caption_bucket) %>%
   summarise(avg_eng = mean(engagement)) %>% ggplot(aes(x = caption_bucket,y = avg_eng))+geom_point(size = 5) + labs(x = "Caption Length",y = "Average Engagement")+ scale_x_discrete(limits = c("<50","50-100","100-150","150-200","200-250","250-300","300-350","350+"))
@@ -180,7 +196,7 @@ new_data %>% filter(engagement != is.na(engagement)) %>%
 The graph clearly show that the single images get more engagement whereas, carousels get less. 
 
 
-```{r}
+```{r,echo=FALSE}
 new_data %>% filter(engagement != is.na(engagement)) %>% mutate(type = case_when(is_video == TRUE & multiple_images == FALSE ~"Video",
                                     is_video == FALSE & multiple_images == FALSE ~ "Picture",
                                     multiple_images == TRUE ~ "Carousel")) %>% 
@@ -194,7 +210,7 @@ new_data %>% filter(engagement != is.na(engagement)) %>% mutate(type = case_when
 
 We see pictures get more comments and likes than videos. 
 
-```{r}
+```{r,echo=FALSE}
 new_data %>% 
   ggplot(aes(x = likes, y = comments, group = is_video, color = is_video)) + geom_point() +scale_y_log10() + scale_x_log10() + scale_color_manual(name = "Type", labels = c("Picture", "Video"),values = c("blue","red"))
 ```
